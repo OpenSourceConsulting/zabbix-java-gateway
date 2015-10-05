@@ -2,6 +2,7 @@
 <project name="zabbix-java-gateway" default="jar.packaging" basedir=".">
 
 	<property name="pkgFile" value="zabbix-java-gateway-2.2.9.1.jar" />
+	<property name="svr.host" value="192.168.0.179" />
 
 	<target name="jar.packaging">
 		<delete file="${basedir}/${pkgFile}"/>
@@ -13,8 +14,8 @@
 		<!-- proxy
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
 		 -->
-		<scp port="22"
-             todir="root@192.168.0.179:/usr/sbin/zabbix_java/bin"
+		<scp port="22" 
+             todir="root@${svr.host}:/usr/sbin/zabbix_java/bin"
              trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}" defaultexcludes="true">
@@ -31,7 +32,7 @@
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
 
 		<scp port="22"
-             todir="root@192.168.0.179:/usr/lib/zabbix/externalscripts"
+             todir="root@${svr.host}:/usr/lib/zabbix/externalscripts"
              trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}" defaultexcludes="true">
@@ -48,7 +49,7 @@
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
 
 		<scp port="22"
-             todir="root@192.168.0.179:/usr/sbin/zabbix_java/lib"
+             todir="root@${svr.host}:/usr/sbin/zabbix_java/lib"
              trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}/lib" defaultexcludes="true">
