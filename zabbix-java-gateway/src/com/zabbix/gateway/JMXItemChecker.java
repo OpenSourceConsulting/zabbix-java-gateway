@@ -19,7 +19,9 @@
 
 package com.zabbix.gateway;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.management.MBeanAttributeInfo;
@@ -37,17 +39,20 @@ import org.json.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zabbix.gateway.threadlocal.MBeanServerConnectionHolder;
+import com.zabbix.gateway.threadlocal.MBeanServerConnectionModel;
+
 
 class JMXItemChecker extends ItemChecker
 {
 	private static final Logger logger = LoggerFactory.getLogger(JMXItemChecker.class);
 
 	private JMXServiceURL url;
-	private JMXConnector jmxc;
+	//private JMXConnector jmxc;
 	private MBeanServerConnection mbsc;
 	
 	private JMXServiceURL wlUrl;//weblogic Àü¿ë
-	private JMXConnector wlJmxc;
+	//private JMXConnector wlJmxc;
 	private MBeanServerConnection wlMbsc;
 
 	private String username;
@@ -67,10 +72,10 @@ class JMXItemChecker extends ItemChecker
 			String urlPath = "/jndi/weblogic.management.mbeanservers.runtime";
 			wlUrl = new JMXServiceURL("iiop", conn, port, urlPath);
 			
-			jmxc = null;
+			//jmxc = null;
 			mbsc = null;
 			
-			wlJmxc = null;
+			//wlJmxc = null;
 			wlMbsc = null;
 
 			username = request.optString(JSON_TAG_USERNAME, null);
@@ -102,7 +107,6 @@ class JMXItemChecker extends ItemChecker
 				env.put(Context.SECURITY_CREDENTIALS, password);
 			}
 			
-
 			if(isWeblogicKey()){
 				
 				logger.debug("connecting to JMX agent at {}..", wlUrl);
@@ -110,8 +114,9 @@ class JMXItemChecker extends ItemChecker
 				logger.debug("classpath: " + System.getProperty("java.class.path"));
 				logger.debug("env: " + env);
 				logger.debug("url: " + url);
-				wlJmxc = JMXConnectorFactory.connect(wlUrl, env);
-				wlMbsc = wlJmxc.getMBeanServerConnection();
+				
+				wlMbsc = getMBeanServerConnection(MBeanServerConnectionHolder.WL_MBSC, wlUrl, env);
+				
 			}
 			
 			if(hasOtherKey()){
@@ -122,8 +127,7 @@ class JMXItemChecker extends ItemChecker
 					env.put(JMXConnector.CREDENTIALS, new String[] {username, password});
 				}*/
 				
-				jmxc = JMXConnectorFactory.connect(url, env);
-				mbsc = jmxc.getMBeanServerConnection();
+				mbsc = getMBeanServerConnection(MBeanServerConnectionHolder.STRD_MBSC, url, env);
 			}
 			
 
@@ -132,22 +136,36 @@ class JMXItemChecker extends ItemChecker
 		}
 		catch (Exception e)
 		{
+			logger.error(e.toString(), e);
+			
+			MBeanServerConnectionHolder.clear();
 			throw new ZabbixException(e);
 		}
 		finally
 		{
-			try { if (null != jmxc) jmxc.close(); } catch (java.io.IOException exception) { }
-
-			jmxc = null;
 			mbsc = null;
-			
-			try { if (null != wlJmxc) wlJmxc.close(); } catch (java.io.IOException exception) { }
-			
-			wlJmxc = null;
 			wlMbsc = null;
 		}
 
 		return values;
+	}
+	
+	private MBeanServerConnection getMBeanServerConnection(String mbscKey, JMXServiceURL url, Map<String, ?> env) throws IOException{
+		MBeanServerConnection _mbsc = MBeanServerConnectionHolder.getMBeanServerConnection(mbscKey);
+		
+		if (_mbsc == null) {
+			JMXConnector jmxc = JMXConnectorFactory.connect(url, env);
+			logger.debug("connected JMXConnector.");
+			
+			_mbsc = jmxc.getMBeanServerConnection();
+			logger.debug("getMBeanServerConnection.");
+			
+			MBeanServerConnectionHolder.put(mbscKey, new MBeanServerConnectionModel(jmxc, _mbsc));
+		} else {
+			logger.debug("reuse MBeanServerConnection.");
+		}
+		
+		return _mbsc;
 	}
 
 	@Override

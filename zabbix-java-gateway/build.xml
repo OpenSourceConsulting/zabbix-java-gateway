@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="zabbix-java-gateway" default="jar.packaging" basedir=".">
 
-	<property name="pkgFile" value="zabbix-java-gateway-2.2.7.jar" />
+	<property name="pkgFile" value="zabbix-java-gateway-2.2.9.1.jar" />
 
 	<target name="jar.packaging">
 		<delete file="${basedir}/${pkgFile}"/>
@@ -10,12 +10,12 @@
 	
 	<target name="scp.to.server" description="scp transfer to Server">
 	
-		<!-- proxy -->
+		<!-- proxy
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
-
+		 -->
 		<scp port="22"
-             todir="root@192.168.0.70:/usr/sbin/zabbix_java/bin"
-             trust="true" password="redhat"
+             todir="root@192.168.0.179:/usr/sbin/zabbix_java/bin"
+             trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}" defaultexcludes="true">
 				<include name="${pkgFile}" />
@@ -31,8 +31,8 @@
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
 
 		<scp port="22"
-             todir="root@192.168.0.70:/usr/lib/zabbix/externalscripts"
-             trust="true" password="redhat"
+             todir="root@192.168.0.179:/usr/lib/zabbix/externalscripts"
+             trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}" defaultexcludes="true">
 				<include name="check_ora.tar.gz" />
@@ -48,8 +48,8 @@
 		<setproxy socksproxyhost="localhost" socksproxyport="20022"/>
 
 		<scp port="22"
-             todir="root@192.168.0.70:/usr/sbin/zabbix_java/lib"
-             trust="true" password="redhat"
+             todir="root@192.168.0.179:/usr/sbin/zabbix_java/lib"
+             trust="true" password="jan01jan"
     		 verbose="true">
 			<fileset dir="${basedir}/lib" defaultexcludes="true">
 				<include name="ojdbc6.jar" />
